@@ -1,0 +1,49 @@
+1st apex class for this challenge
+
+
+global class DailyLeadProcessor implements Schedulable {
+    global void execute(SchedulableContext ctx) {
+        List<lead> leadstoupdate = new List<lead>();
+        List<Lead> leads = [SELECT Id
+            FROM Lead
+            WHERE LeadSource = NULL Limit 200
+            ];
+        for(Lead l:leads){
+            l.LeadSource = 'Dreamforce';
+            leadstoupdate.add(l);
+        }  
+        update leadstoupdate;
+    }
+}
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+2nd apex class for this challenge
+
+@isTest
+private class DailyLeadProcessorTest {
+    public static String CRON_EXP = '0 0 0 15 3 ? 2022';
+    static testmethod void testScheduledJob() {
+        List<Lead> leads = new List<lead>();
+        for (Integer i=0; i<200; i++) {
+            Lead l = new Lead(
+                FirstName = 'First ' + i,
+                LastName = 'LastName',
+                Company = 'The Inc'
+            );
+            leads.add(l);
+        }
+        insert leads;
+       
+        Test.startTest();
+         DailyLeadProcessor ab = new DailyLeadProcessor();
+		String jobId = System.schedule('jobName', '0 5 * * * ?',ab);
+        Test.stopTest();
+        List<Lead> checkleads = new List<Lead>();
+        checkleads = [SELECT Id
+            FROM Lead
+            WHERE LeadSource='Dreamforce' and Company = 'The Inc'];
+        System.assertEquals(200,
+            checkleads.size(),
+            'Tasks were not created');
+    }
+}

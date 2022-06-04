@@ -1,0 +1,47 @@
+1st apex class for this challenge
+
+global class LeadProcessor implements
+    Database.Batchable<sObject> {
+
+    public Database.QueryLocator start(Database.BatchableContext bc) {
+        return Database.getQueryLocator(
+            'SELECT ID from Lead'
+        );
+    }
+    public void execute(Database.BatchableContext bc, List<Lead> scope){
+        // process each batch of records
+        List<Lead> leads = new List<Lead>();
+        for (Lead lead : scope) {
+          lead.LeadSource = 'Dreamforce';
+          leads.add(lead);
+        }
+        update leads; 
+    }
+    global void finish(Database.BatchableContext bc){
+
+    }
+}
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+2nd apex class for this challenge
+
+@isTest
+private class LeadProcessorTest {
+    @testSetup
+    static void setup() {
+        List<Lead> leads = new List<Lead>();
+        for (Integer i=0;i<200;i++) {
+            leads.add(new Lead(LastName='Lead '+i, Company= 'Test Co'));
+        }
+        insert leads;
+        
+    }
+    static testmethod void test() {
+        Test.startTest();
+        LeadProcessor myLeads = new LeadProcessor();
+        Id batchId = Database.executeBatch(myLeads);
+        Test.stopTest();
+        // after the testing stops, assert records were updated properly
+        System.assertEquals(200, [select count() from Lead where LeadSource = 'Dreamforce']);
+    }
+}
