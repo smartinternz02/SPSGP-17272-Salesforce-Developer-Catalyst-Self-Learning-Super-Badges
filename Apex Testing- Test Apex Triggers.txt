@@ -1,0 +1,30 @@
+1st apex class for this challenge
+
+trigger RestrictContactByName on Contact (before insert, before update) {
+	
+	//check contacts prior to insert or update for invalid data
+	For (Contact c : Trigger.New) {
+		if(c.LastName == 'INVALIDNAME') {	//invalidname is invalid
+			c.AddError('The Last Name "'+c.LastName+'" is not allowed for DML');
+		}
+
+	}
+
+
+
+}
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+2nd apex class for this challenge
+
+@isTest
+public class TestRestrictContactByName {
+    
+    @istest
+    public static void testContact(){
+        Contact ct = new Contact();
+        ct.LastName = 'INVALIDNAME';
+        Database.SaveResult res = Database.insert(ct,false);
+        System.assertEquals('The Last Name "INVALIDNAME" is not allowed for DML',res.getErrors()[0].getMessage());
+    }
+
+}
